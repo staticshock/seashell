@@ -1,0 +1,119 @@
+#!/usr/bin/env shunit2
+
+setUp()
+{
+    #tmp_root=.
+    tmp_root="$SHUNIT_TMPDIR"
+    src="$tmp_root/src"
+    dst="$tmp_root/dst"
+    mkdir "$src"
+}
+
+tearDown()
+{
+    rm -rf "$src" "$dst"
+}
+
+runInit()
+{
+    #tree -a "$src"
+    make SRC_ROOT="$src" PATCH_ROOT="$src/patches" DST_ROOT="$dst" >/dev/null
+    assertEquals "0" $?
+    #tree -a "$dst"
+}
+
+runExport()
+{
+    #tree -a "$src"
+    make install SRC_ROOT="$src" DST_ROOT="$dst" >/dev/null
+    assertEquals "0" $?
+    #tree -a "$dst"
+}
+
+runExportCurDir()
+{
+    #tree -a "$src"
+    make install DST_ROOT="$dst" >/dev/null
+    assertEquals "0" $?
+    #tree -a "$dst"
+}
+
+testInstall()
+{
+    touch "$src"/.bashrc
+    touch "$src"/.vimrc
+
+    runExport
+
+    assertTrue "dst not found" "[ -d $dst ]"
+    assertTrue "dst/.bashrc not found" "[ -L $dst/.bashrc ]"
+    assertTrue "dst/.vimrc not found" "[ -L $dst/.vimrc ]"
+}
+
+testSshPermissions()
+{
+    mkdir -p "$src"/.ssh
+    touch "$src"/.ssh/config
+
+    runExport
+
+    assertTrue "~/.ssh not found" "[ -d $dst/.ssh ]"
+    assertEquals "Bad permissions on ~/.ssh" "700" "$(stat -c %a $dst/.ssh)"
+}
+
+testAuthorizedKeys()
+{
+    mkdir -p "$src"/.ssh
+    echo "key1" > "$src"/.ssh/id_rsa1.pub
+    echo "key2" > "$src"/.ssh/id_rsa2.pub
+
+    runExport
+
+    assertEquals "2" "$(cat $dst/.ssh/authorized_keys | wc -l)"
+
+    echo "key3" > "$src"/.ssh/id_rsa3.pub
+
+    runExport
+
+    assertEquals "3" "$(cat $dst/.ssh/authorized_keys | wc -l)"
+}
+
+testExplicitExport()
+{
+    touch "$src"/.gitignore
+    touch "$src"/.gitignore.export
+
+    assertTrue "src/.gitignore.export not found" "[ -e $src/.gitignore.export ]"
+
+    runExport
+
+    assertFalse "dst/.gitignore.export found" "[ -e $dst/.gitignore.export ]"
+    assertEquals "bad origin for dst/.gitignore" "$src/.gitignore.export" "$(readlink -f $dst/.gitignore)"
+}
+
+testPatch()
+{
+    fileToPatch="$src"/submodule/file
+
+    mkdir -p "$src"/submodule
+    echo "#!/bin/bash" > "$fileToPatch"
+
+    mkdir -p "$src"/patches/submodule
+    cat <<EOF > "$src"/patches/submodule/0001-ls-l.patch
+--- a/file
++++ b/file
+@@ -1 +1,2 @@
+ #!/bin/bash
++alias ll='ls -l'
+EOF
+
+    assertEquals "1" "$(cat $fileToPatch | wc -l)"
+
+    runInit
+
+    assertEquals "patch not applied" "2" "$(cat $fileToPatch | wc -l)"
+
+    runInit
+
+    assertEquals "2" "$(cat $fileToPatch | wc -l)"
+}
