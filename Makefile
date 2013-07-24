@@ -19,10 +19,9 @@ DST_ROOT = $(HOME)
 PATCH_ROOT = $(CURDIR)/patches
 
 # By default, export all files or directories starting with a dot, minus git
-# files, plus .gitconfig.
+# files.
 EXPORT = $(shell find "$(SRC_ROOT)" -maxdepth 1 -name '.*' -not -name '.git*' \
-		 -not -name '.mailmap' -not -name '.ssh' -not -name '*.pid' \
-		 -or -name '.gitconfig') \
+		 -not -name '.mailmap' -not -name '.ssh' -not -name '*.pid') \
 		 $(shell find "$(SRC_ROOT)"/.ssh -mindepth 1 -type f 2>/dev/null)
 
 # The global .gitignore conflicts with the repo's own .gitignore, so the global
