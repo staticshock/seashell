@@ -20,9 +20,13 @@ PATCH_ROOT = $(CURDIR)/patches
 
 # By default, export all files or directories starting with a dot, minus git
 # files.
-EXPORT = $(shell find "$(SRC_ROOT)" -maxdepth 1 -name '.*' -not -name '.git*' \
-		 -not -name '.mailmap' -not -name '.ssh' -not -name '*.pid') \
-		 $(shell find "$(SRC_ROOT)"/.ssh -mindepth 1 -type f 2>/dev/null)
+EXPORT = $(shell find "$(SRC_ROOT)" -maxdepth 1 -name '.*' $(patsubst %,-not -name '%',$(NO_EXPORT))) \
+		 $(shell find $(addprefix "$(SRC_ROOT)"/,$(EXPORT_CONTENT)) -mindepth 1 -type f 2>/dev/null) \
+		 $(wildcard $(addprefix $(SRC_ROOT)/,$(EXPORT_APPEND)))
+
+EXPORT_APPEND =
+EXPORT_CONTENT = .ssh
+NO_EXPORT = .git* .mailmap *.pid $(EXPORT_CONTENT)
 
 # The global .gitignore conflicts with the repo's own .gitignore, so the global
 # one can be stored in the repo as .gitignore.export.
