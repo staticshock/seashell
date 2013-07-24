@@ -38,6 +38,16 @@ leading dot. Run it as `make import --dry-run` to see what would happen. Tune
 it by overriding `EXPORT` in Makefile.conf, or just don't worry about it and
 import things manually.
 
+Merging an existing dotfiles repo into seashell without losing any history is
+also pretty straight-forward:
+
+```sh
+cd /path/to/existing/repo
+git remote add seashell https://github.com/staticshock/seashell
+git fetch seashell
+git merge seashell/master
+```
+
 Usage
 -----
 
