@@ -20,7 +20,7 @@ PATCH_ROOT = $(CURDIR)/patches
 
 # By default, export all files or directories starting with a dot, minus git
 # files.
-EXPORT = $(shell find "$(SRC_ROOT)" -maxdepth 1 -name '.*' $(patsubst %,-not -name '%',$(NO_EXPORT))) \
+EXPORT = $(shell find "$(SRC_ROOT)" -mindepth 1 -maxdepth 1 -name '.*' $(patsubst %,-not -name '%',$(NO_EXPORT))) \
 		 $(shell find $(addprefix "$(SRC_ROOT)"/,$(EXPORT_CONTENT)) -mindepth 1 -type f 2>/dev/null) \
 		 $(wildcard $(addprefix $(SRC_ROOT)/,$(EXPORT_APPEND)))
 
