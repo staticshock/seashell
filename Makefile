@@ -56,7 +56,18 @@ else
 ifeq ($(COPY),y)
 export_target = @cp -rfv "$<" "$@"
 else
-export_target = @ln -sfTv "$<" "$@"
+# Use '-T' option of GNU coreutils `ln` if available to prevent interpreting
+# the target argument of `ln` as a directory into which to link a regular
+# file (i.e., `ln -s FILE FILE` and `ln -s DIR DIR` are allowed, but
+# `ln -s FILE DIR` is not). GNU `ln` might be installed as `gln` under
+# non-Linux systems.
+export_target = @if ln --version 2>/dev/null | grep -qe'GNU coreutils'; then \
+		ln -sfTv "$<" "$@"; \
+		elif gln --version 2>/dev/null | grep -qe'GNU coreutils'; then \
+		gln -sfTv "$<" "$@"; \
+		elif [ -f "$<" ] && [ -d "$@" ]; then \
+		echo "$@ must be a regular file if $< is" 1>&2; \
+		else ln -sfv "$<" "$@"; fi
 endif
 endif
 
