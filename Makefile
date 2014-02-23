@@ -114,7 +114,7 @@ install : $(DST_ROOT)/.ssh
 endif
 .PHONY: $(DST_ROOT)/.ssh
 $(DST_ROOT)/.ssh :
-	@install -d "$@" -m 700
+	@install -d -m 700 "$@"
 
 .PHONY : import
 import :
